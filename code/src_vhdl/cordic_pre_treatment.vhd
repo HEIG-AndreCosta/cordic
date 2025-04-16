@@ -41,12 +41,6 @@ entity cordic_pre_treatment is
         im_o                    : out  std_logic_vector(DATASIZE - 1 downto 0);
         original_quadrant_id_o  : out std_logic_vector(1 downto 0);
         signals_exchanged_o     : out std_logic
-
-        -- dataflow control signals
-        -- ready_o     : out std_logic;
-        -- valid_i     : in  std_logic;
-        -- ready_i     : in  std_logic;
-        -- valid_o     : out std_logic
     );
 end cordic_pre_treatment;
 
