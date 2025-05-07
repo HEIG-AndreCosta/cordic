@@ -30,7 +30,7 @@ begin
         im_v :=  unsigned(im_i);
         phi_v := unsigned(phi_i);
         iter_v := unsigned(iter_i);
-        negative_v :=  phi_v(DATASIZE-1);
+        negative_v :=  phi_v(phi_i'high);
         
 
         if negative_v = '1' then
