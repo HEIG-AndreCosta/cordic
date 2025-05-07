@@ -46,8 +46,8 @@ begin
         end if;
 
         -- shift
-        re_v := shift_left(re_v, to_integer(iter_v));
-        im_v   := shift_left(im_v, to_integer(iter_v));
+        re_v := shift_right(re_v, to_integer(iter_v));
+        im_v   := shift_right(im_v, to_integer(iter_v));
 
         re_o  <= std_logic_vector(re_v);
         im_o  <= std_logic_vector(im_v);
