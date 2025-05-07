@@ -84,8 +84,6 @@ architecture pipeline of cordic is
 begin
     pre_treatment: entity work.cordic_pre_treatment
     port map(
-       clk_i => clk_i,
-       rst_i => rst_i,
        re_i => re_i_s(0),
        im_i => im_i_s(0),
        re_o => re_o_s(0),
@@ -131,8 +129,6 @@ begin
 
     post_treatment: entity work.cordic_post_treatment
     port map(
-       clk_i => clk_i,
-       rst_i => rst_i,
        re_i => re_i_s(11),
        im_i => im_i_s(11),
        original_quadrant_id_i => original_quadrant_id_s,

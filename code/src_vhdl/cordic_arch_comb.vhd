@@ -84,8 +84,6 @@ begin
 
     pre_treatment: entity work.cordic_pre_treatment
     port map(
-       clk_i => clk_i,
-       rst_i => rst_i,
        re_i => re_i,
        im_i => im_i,
        re_o => re_s(0),
@@ -108,8 +106,6 @@ begin
 
     post_treatment: entity work.cordic_post_treatment
     port map(
-       clk_i => clk_i,
-       rst_i => rst_i,
        re_i => re_s(re_s'high),
        im_i => im_s(im_s'high),
        original_quadrant_id_i => original_quadrant_id_s,

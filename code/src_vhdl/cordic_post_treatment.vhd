@@ -32,8 +32,6 @@ use work.cordic_pkg.all;
 
 entity cordic_post_treatment is
     port (
-        clk_i                   : in  std_logic;
-        rst_i                   : in  std_logic;
         -- input data in the cartesian form
         re_i                    : in  std_logic_vector(DATASIZE - 1 downto 0);
         im_i                    : in  std_logic_vector(DATASIZE - 1 downto 0);
