@@ -33,42 +33,38 @@ use work.cordic_pkg.all;
 architecture comb of cordic is
 
     component cordic_pre_treatment is
-    port (
-        clk_i                   : in  std_logic;
-        rst_i                   : in  std_logic;
-        re_i                    : in  std_logic_vector(DATASIZE - 1 downto 0);
-        im_i                    : in  std_logic_vector(DATASIZE - 1 downto 0);
-        re_o                    : out  std_logic_vector(DATASIZE - 1 downto 0);
-        im_o                    : out  std_logic_vector(DATASIZE - 1 downto 0);
-        original_quadrant_id_o  : out std_logic_vector(1 downto 0);
-        signals_exchanged_o     : out std_logic
-    );
+        port (
+                 re_i                    : in  std_logic_vector(DATASIZE - 1 downto 0);
+                 im_i                    : in  std_logic_vector(DATASIZE - 1 downto 0);
+                 re_o                    : out  std_logic_vector(DATASIZE - 1 downto 0);
+                 im_o                    : out  std_logic_vector(DATASIZE - 1 downto 0);
+                 original_quadrant_id_o  : out std_logic_vector(1 downto 0);
+                 signals_exchanged_o     : out std_logic
+             );
     end component;
 
     component cordic_iteration is
         port (
-            re_i  : in  std_logic_vector(DATASIZE - 1 downto 0);   
-            im_i  : in  std_logic_vector(DATASIZE - 1 downto 0);    
-            phi_i : in  std_logic_vector(PHI_OUTPUTSIZE - 1 downto 0);
-            re_o  : out std_logic_vector(DATASIZE - 1 downto 0);    
-            im_o  : out std_logic_vector(DATASIZE - 1 downto 0);     
-            phi_o : out std_logic_vector(PHI_OUTPUTSIZE - 1 downto 0);
-            iter_i : in std_logic_vector(3 downto 0)
-        );
+                 re_i  : in  std_logic_vector(DATASIZE - 1 downto 0);   
+                 im_i  : in  std_logic_vector(DATASIZE - 1 downto 0);    
+                 phi_i : in  std_logic_vector(PHI_OUTPUTSIZE - 1 downto 0);
+                 re_o  : out std_logic_vector(DATASIZE - 1 downto 0);    
+                 im_o  : out std_logic_vector(DATASIZE - 1 downto 0);     
+                 phi_o : out std_logic_vector(PHI_OUTPUTSIZE - 1 downto 0);
+                 iter_i : in std_logic_vector(3 downto 0)
+             );
     end component;
 
     component cordic_post_treatment is
-    port (
-        clk_i                   : in  std_logic;
-        rst_i                   : in  std_logic;
-        re_i                    : in  std_logic_vector(DATASIZE - 1 downto 0);
-        im_i                    : in  std_logic_vector(DATASIZE - 1 downto 0);
-        original_quadrant_id_i  : in std_logic_vector(1 downto 0);
-        signals_exchanged_i     : in std_logic;
-        phi_i                   : in std_logic_vector(PHI_OUTPUTSIZE - 1 downto 0);
-        amp_o       : out std_logic_vector(AMP_OUTPUTSIZE - 1 downto 0);
-        phi_o       : out std_logic_vector(PHI_OUTPUTSIZE - 1 downto 0)
-    );
+        port (
+                 re_i                    : in  std_logic_vector(DATASIZE - 1 downto 0);
+                 im_i                    : in  std_logic_vector(DATASIZE - 1 downto 0);
+                 original_quadrant_id_i  : in std_logic_vector(1 downto 0);
+                 signals_exchanged_i     : in std_logic;
+                 phi_i                   : in std_logic_vector(PHI_OUTPUTSIZE - 1 downto 0);
+                 amp_o       : out std_logic_vector(AMP_OUTPUTSIZE - 1 downto 0);
+                 phi_o       : out std_logic_vector(PHI_OUTPUTSIZE - 1 downto 0)
+             );
     end component;
 
     type iter_values_array_t is array (0 to 10) 
