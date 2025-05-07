@@ -72,8 +72,8 @@ architecture pipeline of cordic is
     signal im_o_s                   : iter_values_array_t; 
     signal phi_o_s                  : iter_phi_array_t; 
 
-    signal data_valid_s             : iter_data_valid_array_t;
-    signal stop_s                   : iter_data_valid_array_t;
+    signal data_valid_s             : std_logic_vector(11 downto 0);
+    signal stop_s                   : std_logic;
     signal original_quadrant_id_s   : std_logic_vector(1 downto 0);
     signal signals_exchanged_s      : std_logic;
 
