@@ -154,7 +154,7 @@ begin
     end process;
 
     -- TODO: Generate stop signal for each pipeline stage
-    stop_s <= data_valid_s(10) = '1' and ready_i = '0';
+    stop_s <= '1' when ready_i = '0' and data_valid_s(10) = '1' else '0';
     ready_s <= not stop_s;
     ready_o <= ready_s;
 
