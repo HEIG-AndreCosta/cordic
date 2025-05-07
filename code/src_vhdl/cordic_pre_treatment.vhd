@@ -66,11 +66,11 @@ begin
         
         -- Calcul de la valeur absolue de re et im.
         -- Ceci projette les coordonnées dans le premier quadrant.
-        if not original_quadrant_id_v(1) then
+        if original_quadrant_id_v(1) = '0' then
             re_v := not re_v;
             re_v := re_v - 1;
         end if;
-        if not original_quadrant_id_v(0) then
+        if original_quadrant_id_v(0) = '0' then
             im_v := not im_v;
             im_v := im_v - 1;
         end if;
@@ -87,4 +87,3 @@ begin
     end process;
 
 end comb;
-
