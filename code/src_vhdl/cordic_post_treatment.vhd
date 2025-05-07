@@ -78,7 +78,9 @@ begin
             -- Quatrième
             when "10" => phi_v := -phi_v;
         end case;
+        phi_o <= std_logic_vector(phi_v);
     end process;
     amp_o <= re_i;
 
 end comb;
+
