@@ -63,7 +63,6 @@ architecture sequential of cordic is
     type cordic_state_t is (
         IDLE,
         ITERATION,
-        INCREMENT,
         POST_TREATMENT,
         VALID
     );
