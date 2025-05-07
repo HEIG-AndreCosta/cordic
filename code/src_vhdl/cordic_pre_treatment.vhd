@@ -53,7 +53,7 @@ begin
         variable tmp_v : unsigned(re_i'range);
         variable im_v : unsigned(im_i'range);
         variable signals_exchanged_v : std_logic;
-        variable original_quadrant_id_v : unsigned(1 downto 0);
+        variable original_quadrant_id_v : std_logic_vector(1 downto 0);
     begin
         re_v := unsigned(re_i);
         im_v := unsigned(im_i);
