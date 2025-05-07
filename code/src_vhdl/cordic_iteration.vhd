@@ -45,10 +45,9 @@ begin
             phi_v := phi_v + unsigned(alpha_values_c(to_integer(iter_v)));
         end if;
 
-        for i in 0 to to_integer(iter_v) loop
-            re_v := re_v(re_v'high downto 1) & '0';
-            im_v := im_v(im_v'high downto 1) & '0';
-        end loop;
+        -- shift
+        re_v := shift_left(re_v, to_integer(iter_v));
+        im_v   := shift_left(im_v, to_integer(iter_v));
 
     end process;
 end cordic_iteration;
