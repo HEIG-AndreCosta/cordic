@@ -48,7 +48,7 @@ package cordic_pkg is
     constant N_ITER             : integer := 10;
 
     -- Size of cumulated angle propagation through CORDIC stages
-    constant INTERNAL_ANGLESIZE : integer := 12;
+    constant INTERNAL_ANGLESIZE : integer := 11;
 
     -- Size of cumulated angle propagation through CORDIC stages
     constant INTERNAL_DATASIZE  : integer := DATASIZE + 1;
@@ -69,15 +69,15 @@ package cordic_pkg is
 
     -- Rotation angle values
     constant alpha_values_c : alpha_values_array_t(1 to 10):= (
-        "000100101110",
-        "000010100000",
-        "000001010001",
-        "000000101001",
-        "000000010100",
-        "000000001010",
-        "000000000101",
-        "000000000011",
-        "000000000001",
-        "000000000001"
+        "00100101110",
+        "00010100000",
+        "00001010001",
+        "00000101001",
+        "00000010100",
+        "00000001010",
+        "00000000101",
+        "00000000011",
+        "00000000001",
+        "00000000001"
     );
 end cordic_pkg;
