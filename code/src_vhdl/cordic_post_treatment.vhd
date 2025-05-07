@@ -51,12 +51,8 @@ architecture comb of cordic_post_treatment is
 begin
 
     process(all) 
-        variable re_v : unsigned(re_i'range);
         variable phi_v : signed(phi_i'range);
-        variable im_v : unsigned(im_i'range);
     begin
-        re_v := unsigned(re_i);
-        im_v := unsigned(im_i);
         phi_v := signed(phi_i);
 
         -- Si les coordonnées re et im ont été échangées à l’étape 1,
@@ -86,4 +82,3 @@ begin
     amp_o <= re_i;
 
 end comb;
-
