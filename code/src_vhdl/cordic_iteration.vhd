@@ -49,5 +49,8 @@ begin
         re_v := shift_left(re_v, to_integer(iter_v));
         im_v   := shift_left(im_v, to_integer(iter_v));
 
+        re_o  <= std_logic_vector(re_v);
+        im_o  <= std_logic_vector(im_v);
+        phi_o  <= std_logic_vector(phi_v);
     end process;
 end cordic_iteration;
