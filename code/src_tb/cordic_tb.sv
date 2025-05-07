@@ -1,4 +1,6 @@
 
+//https://verificationguide.com/
+
 
 interface cordic_in_if;
     logic[11:0] re;
@@ -43,16 +45,31 @@ module cordic_tb#(int TESTCASE = 0);
         .valid_o(out_if.valid)
     );
 
+    task input(logic[11:0] re, logic[11:0] im) begin
+        (@posedge clk_i);
+        /*while(in_if.ready == 0) begin
+            (@posedge clk_i);
+        end*/
+        // si le wait ne fonctionne pas, utilisé la while ci-dessus
+        wait(in_if.ready == 1);
+        (@posedge clk_i);
+        in_if.re = re;
+        in_if.im = im;
+        in_if.valid = 1;
+        (@posedge clk_i);
+        in_if.valid = 0;
+    end
 
     initial begin
         in_if.re = 0;
         in_if.im = 0;
         in_if.valid = 0;
         out_if.ready = 1;
+        byte iteration = 0;
         rst = 1;
         ##2;
         rst = 0;
-        // Do something
+        
         ##10;
     end
 
