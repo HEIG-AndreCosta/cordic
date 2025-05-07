@@ -168,11 +168,13 @@ begin
         next_re_s <= curr_re_s;
         next_im_s <= curr_im_s;
         next_phi_s <= curr_phi_s;
+        next_amp_s <= curr_amp_s;
         next_signals_exchanged_s <= curr_signals_exchanged_s;
         next_original_quadrant_id_s <= curr_original_quadrant_id_s;
         state_v := curr_cordic_state_s;
         iter_v := curr_iter_s;
         valid_o <= '0';
+        ready_o <= '0';
 
         case state_v is
             when IDLE =>
