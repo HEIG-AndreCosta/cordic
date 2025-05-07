@@ -84,6 +84,12 @@ begin
             signals_exchanged_v := '1';
         end if;
 
+        re_o <= std_logic_vector(re_v);
+        im_o <= std_logic_vector(im_v);
+        original_quadrant_id_o  <=  original_quadrant_id_v;
+        signals_exchanged_o    <= signals_exchanged_v;
+
     end process;
 
 end comb;
+
