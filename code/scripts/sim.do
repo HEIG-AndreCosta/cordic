@@ -10,6 +10,8 @@ proc vhdl_compil { ARCHI } {
 
     vcom -2008 $Path_VHDL/cordic_pkg.vhd
     vcom -2008 $Path_VHDL/cordic.vhd
+    vcom -2008 $Path_VHDL/cordic_pre_treatment.vhd
+    vcom -2008 $Path_VHDL/cordic_post_treatment.vhd
     vcom -2008 $Path_VHDL/cordic_arch_$ARCHI.vhd
     vlog -sv $Path_TB/cordic_tb.sv
 }

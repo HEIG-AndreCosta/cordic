@@ -1,5 +1,30 @@
 # SCF - Labo 8 - Calculateur CORDIC
 
+## Simulation
+´´´bash
+# 1. Naviguer vers le répertoire sim
+cd ~/cordic/code/sim
+
+# 2. Lancer ModelSim/QuestaSim
+vsim
+
+# 3. Exécuter le script
+do ../scripts/sim.do
+
+# Architecture combinatoire (par défaut)
+vsim -do "do ../scripts/sim.do comb 0"
+
+# Architecture pipeline
+vsim -do "../scripts/sim.do pipeline 0"
+
+# Architecture séquentielle
+vsim -do "../scripts/sim.do sequential 0"
+
+# Toutes les architectures
+vsim -do "../scripts/sim.do all"
+
+´´´
+
 ## Doc info
 ### Installation de typst
 
