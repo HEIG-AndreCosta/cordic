@@ -64,13 +64,13 @@ begin
         
         -- Calcul de la valeur absolue de re et im.
         -- Ceci projette les coordonnées dans le premier quadrant.
-        if original_quadrant_id_v(1) = '0' then
+        if original_quadrant_id_v(1) = '1' then
             re_v := not re_v;
-            re_v := re_v - 1;
+            re_v := re_v + 1;
         end if;
-        if original_quadrant_id_v(0) = '0' then
+        if original_quadrant_id_v(0) = '1' then
             im_v := not im_v;
-            im_v := im_v - 1;
+            im_v := im_v + 1;
         end if;
 
         -- Comparaison entre re et im. Si re > im alors leurs valeurs sont échangées. Ceci projette

@@ -49,36 +49,46 @@ architecture comb of cordic_post_treatment is
 begin
 
     process(all) 
-        variable phi_v : signed(phi_i'range);
+        variable phi_v        : signed(phi_i'range);
+        variable pidiv2_v     : signed(phi_i'range);
+        variable pidiv1_v     : signed(phi_i'range);
     begin
         phi_v := signed(phi_i);
+        
+        -- Convertir les constantes en signed de la bonne taille
+        pidiv2_v := signed(std_logic_vector(pidiv2_c));
+        pidiv1_v := signed(std_logic_vector(pidiv1_c));
 
-        -- Si les coordonnées re et im ont été échangées à l’étape 1,
-        -- appliquer la correction phi = P I/2 − phi. Sinon laisser l’angle tel quel
+        -- Si les coordonnées re et im ont été échangées à l'étape 1,
+        -- appliquer la correction phi = PI/2 − phi. Sinon laisser l'angle tel quel
         if signals_exchanged_i = '1' then
-            phi_v := signed(pidiv2_c) - phi_v;
+            phi_v := pidiv2_v - phi_v;
         end if;
 
         -- Projection sur les quatre quadrants
         --  — Premier quadrant : phi = phi
-        --  — Deuxième quadrant : phi = P I − phi
-        --  — Troisième quadrant : phi = phi + P I
+        --  — Deuxième quadrant : phi = PI − phi
+        --  — Troisième quadrant : phi = phi + PI
         --  — Quatrième quadrant : phi = −phi
-        -- original_quadrant_id_i(1) -> re MSb
-        -- original_quadrant_id_i(0) -> im MSb
+        -- original_quadrant_id_i(1) -> re MSb  (signe de re)
+        -- original_quadrant_id_i(0) -> im MSb  (signe de im)
         case original_quadrant_id_i is
-            -- Premier
+            -- Premier quadrant : re positif, im positif
             when "00" => null; -- phi = phi
-            -- Deuxième
-            when "01" => phi_v := signed(pidiv1_c) - phi_v;
-            -- Troisième
-            when "11" => phi_v := signed(pidiv1_c) + phi_v;
-            -- Quatrième
-            when "10" => phi_v := -phi_v;
+            -- Deuxième quadrant : re négatif, im positif  
+            when "10" => phi_v := pidiv1_v - phi_v;
+            -- Troisième quadrant : re négatif, im négatif
+            when "11" => phi_v := pidiv1_v + phi_v;
+            -- Quatrième quadrant : re positif, im négatif
+            when "01" => phi_v := -phi_v;
+            -- Couvrir tous les cas possibles même si théoriquement on ne devrait pas y arriver
+            when others => null;
         end case;
+        
         phi_o <= std_logic_vector(phi_v);
     end process;
+    
+    -- L'amplitude est simplement la valeur réelle à la sortie de la dernière itération
     amp_o <= re_i;
 
 end comb;
-
