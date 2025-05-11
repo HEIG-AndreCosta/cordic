@@ -169,12 +169,20 @@ module cordic_tb#(int TESTCASE = 0);
         automatic logic signed [10:0] result_phi;
         automatic logic [11:0] expected_amp;
         automatic logic signed [10:0] expected_phi;
+        automatic real theoretical_amp;
+        automatic real theoretical_phi_rad;
+        automatic logic signed [10:0] theoretical_phi;
         
         $display("\n--- Test: %s ---", test_name);
         $display("Entrees: re=%0d, im=%0d", test_re, test_im);
         
         // Calculer les valeurs attendues
         calculate_expected(test_re, test_im, expected_amp, expected_phi);
+        
+        // Calculer les valeurs theoriques
+        theoretical_amp = $sqrt($pow($itor(test_re), 2) + $pow($itor(test_im), 2));
+        theoretical_phi_rad = $atan2($itor(test_im), $itor(test_re));
+        theoretical_phi = theoretical_phi_rad * (1024.0 / PI);
         
         // Envoyer les donnees d'entree
         input_data(test_re, test_im);
@@ -183,8 +191,8 @@ module cordic_tb#(int TESTCASE = 0);
         output_capture(result_amp, result_phi);
         
         // Afficher la comparaison
-        $display("Amplitude - Attendue: %0d, Obtenue: %0d", expected_amp, result_amp);
-        $display("Phase - Attendue: %0d, Obtenue: %0d", expected_phi, result_phi);
+        $display("Amplitude - Attendue: %0d, Obtenue: %0d, Theorique: %0.0f", expected_amp, result_amp, theoretical_amp);
+        $display("Phase - Attendue: %0d, Obtenue: %0d, Theorique: %0d", expected_phi, result_phi, theoretical_phi);
         
         // Verification
         if (result_amp == expected_amp && result_phi == expected_phi) begin
