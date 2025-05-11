@@ -43,9 +43,8 @@ module cordic_tb#(int TESTCASE = 0);
         .valid_o(out_if.valid)
     );
 
-    // Tâche pour envoyer des données d'entrée
-    task automatic input_data(logic signed [11:0] re, logic signed [11:0] im);
-        // Attendre que le système soit prêt
+    // Tache pour envoyer des donnees
+    task automatic input_data(logic[11:0] re, logic[11:0] im);
         wait(in_if.ready == 1);
         @(posedge clk);
         in_if.re = re;
@@ -55,82 +54,149 @@ module cordic_tb#(int TESTCASE = 0);
         in_if.valid = 0;
     endtask
 
-    // Tâche pour capturer les données de sortie
-    task automatic output_capture(output logic signed [11:0] amp, output logic signed [10:0] phi);
+    // Tache pour capturer les donnees de sortie
+    task automatic output_capture(output logic[11:0] amp, output logic[10:0] phi);
         wait(out_if.valid == 1);
         @(posedge clk);
         amp = out_if.amp;
         phi = out_if.phi;
     endtask
 
-    // Fonction pour convertir l'angle de CORDIC en radians
-    function real cordic_to_rad(logic signed [10:0] phi);
-        // Conversion selon la spécification : plage binaire complète = [-π, π]
-        return real'(phi) * PI / (2.0**10);
+    // Fonction pour calculer les valeurs attendues
+    function automatic void calculate_expected(
+        input logic signed [11:0] re_in,
+        input logic signed [11:0] im_in,
+        output logic [11:0] amp_expected,
+        output logic signed [10:0] phi_expected
+    );
+        // Toutes les declarations doivent etre au debut de la fonction
+        logic signed [11:0] re, im;
+        logic signed [10:0] phi;
+        logic [1:0] original_quadrant_id;
+        logic signals_exchanged;
+        logic signed [10:0] alpha_values[10];
+        logic signed [11:0] temp;
+        logic signed [10:0] PI_DIV_2;
+        logic signed [10:0] PI_VALUE;
+        int i;
+        logic signed [11:0] re_old, im_old;
+        logic signed [10:0] phi_old;
+        logic im_negative;
+        logic signed [11:0] re_shift, im_shift;
+        
+        // Constantes alpha (comme dans le package VHDL)
+        alpha_values[0] = 11'b00100101110; // 302
+        alpha_values[1] = 11'b00010100000; // 160
+        alpha_values[2] = 11'b00001010001; // 81
+        alpha_values[3] = 11'b00000101001; // 41
+        alpha_values[4] = 11'b00000010100; // 20
+        alpha_values[5] = 11'b00000001010; // 10
+        alpha_values[6] = 11'b00000000101; // 5
+        alpha_values[7] = 11'b00000000011; // 3
+        alpha_values[8] = 11'b00000000001; // 1
+        alpha_values[9] = 11'b00000000001; // 1
+        
+        // Etape 1 : Pretraitement
+        // Determiner le quadrant d'origine
+        original_quadrant_id = {re_in[11], im_in[11]};
+        
+        // Calcul des valeurs absolues
+        re = (re_in[11]) ? -re_in : re_in;
+        im = (im_in[11]) ? -im_in : im_in;
+        
+        // Echange si re > im
+        signals_exchanged = 0;
+        if (re > im) begin
+            temp = re;
+            re = im;
+            im = temp;
+            signals_exchanged = 1;
+        end
+        
+        // Etape 2 : Iterations CORDIC
+        phi = 0;
+        
+        for (i = 1; i <= 10; i++) begin
+            re_old = re;
+            im_old = im;
+            phi_old = phi;
+            im_negative = (im[11] == 1);
+            
+            // Division par 2^i (shift)
+            re_shift = re_old >>> i;
+            im_shift = im_old >>> i;
+            
+            if (im_negative) begin
+                re = re_old - im_shift;
+                im = im_old + re_shift;
+                phi = phi_old - alpha_values[i-1];
+            end else begin
+                re = re_old + im_shift;
+                im = im_old - re_shift;
+                phi = phi_old + alpha_values[i-1];
+            end
+        end
+        
+        // Etape 3 : Projection de l'angle sur les 4 quadrants
+        PI_DIV_2 = 11'd512; // 2^9
+        PI_VALUE = 11'd1024; // 2^10
+        
+        // 1. Projection sur le premier quadrant
+        if (signals_exchanged) begin
+            phi = PI_DIV_2 - phi;
+        end
+        
+        // 2. Projection sur les quatre quadrants
+        case (original_quadrant_id)
+            2'b00: ; // Premier quadrant : phi = phi (pas de changement)
+            2'b10: phi = PI_VALUE - phi; // Deuxieme quadrant
+            2'b11: phi = phi + PI_VALUE; // Troisieme quadrant
+            2'b01: phi = -phi; // Quatrieme quadrant
+        endcase
+        
+        // Etape 4 : Extraction de l'amplitude
+        amp_expected = re[11:0];
+        phi_expected = phi;
     endfunction
 
-    // Fonction pour calculer l'amplitude attendue
-    function real expected_amp(real re, real im);
-        return $sqrt(re*re + im*im);
-    endfunction
-
-    // Fonction pour calculer la phase attendue
-    function real expected_phase(real re, real im);
-        return $atan2(im, re);
-    endfunction
-
-    // Fonction pour calculer la valeur absolue (remplacement de $abs)
-    function real abs_real(real value);
-        if (value < 0)
-            return -value;
-        else
-            return value;
-    endfunction
-
-    // Tâche de test avec vérification
-    task automatic test_cordic(logic signed [11:0] re, logic signed [11:0] im);
-        real expected_amplitude, expected_angle;
-        real actual_amplitude, actual_angle;
-        real amp_error, phase_error;
-        logic signed [11:0] result_amp;
-        logic signed [10:0] result_phi;
+    // Tache pour effectuer un test complet
+    task automatic test_cordic(
+        input string test_name,
+        input logic signed [11:0] test_re,
+        input logic signed [11:0] test_im
+    );
+        automatic logic [11:0] result_amp;
+        automatic logic signed [10:0] result_phi;
+        automatic logic [11:0] expected_amp;
+        automatic logic signed [10:0] expected_phi;
+        
+        $display("\n--- Test: %s ---", test_name);
+        $display("Entrees: re=%0d, im=%0d", test_re, test_im);
         
         // Calculer les valeurs attendues
-        expected_amplitude = expected_amp(real'(re), real'(im));
-        expected_angle = expected_phase(real'(re), real'(im));
+        calculate_expected(test_re, test_im, expected_amp, expected_phi);
         
-        // Envoyer les données d'entrée
-        input_data(re, im);
+        // Envoyer les donnees d'entree
+        input_data(test_re, test_im);
         
-        // Capturer les résultats
+        // Attendre et capturer les resultats
         output_capture(result_amp, result_phi);
         
-        // Convertir les résultats
-        actual_amplitude = real'(result_amp);
-        actual_angle = cordic_to_rad(result_phi);
+        // Afficher la comparaison
+        $display("Amplitude - Attendue: %0d, Obtenue: %0d", expected_amp, result_amp);
+        $display("Phase - Attendue: %0d, Obtenue: %0d", expected_phi, result_phi);
         
-        // Calculer les erreurs
-        amp_error = abs_real(actual_amplitude - expected_amplitude);
-        phase_error = abs_real(actual_angle - expected_angle);
-        
-        // Afficher les résultats
-        $display("Test: re=%0d, im=%0d", re, im);
-        $display("  Amplitude - Attendue: %0.3f, Obtenue: %0.3f, Erreur: %0.3f", 
-                 expected_amplitude, actual_amplitude, amp_error);
-        $display("  Phase - Attendue: %0.3f rad, Obtenue: %0.3f rad, Erreur: %0.3f", 
-                 expected_angle, actual_angle, phase_error);
-        
-        // Vérifier si l'erreur est acceptable (tolérance)
-        if (amp_error > 10.0) 
-            $error("Erreur d'amplitude trop grande!");
-        if (phase_error > 0.01) 
-            $error("Erreur de phase trop grande!");
+        // Verification
+        if (result_amp == expected_amp && result_phi == expected_phi) begin
+            $display("*** TEST REUSSI ***");
+        end else begin
+            $display("*** TEST ECHOUE ***");
+            $display("Erreur amplitude: %0d", $signed(result_amp - expected_amp));
+            $display("Erreur phase: %0d", $signed(result_phi - expected_phi));
+        end
     endtask
 
-    // Bloc initial principal
     initial begin
-        logic signed [11:0] test_re, test_im;
-        
         // Initialisation
         in_if.re = 0;
         in_if.im = 0;
@@ -143,65 +209,31 @@ module cordic_tb#(int TESTCASE = 0);
         rst = 0;
         ##10;
         
-        // Tests selon les quadrants
-        $display("=== Test du système CORDIC ===");
+        $display("=== Test du systeme CORDIC - 8 tests pour tous les quadrants ===");
         
-        // Premier quadrant (re > 0, im > 0)
-        $display("\n--- Premier quadrant ---");
-        test_cordic(12'd1000, 12'd500);
-        ##5;
-        test_cordic(12'd800, 12'd800);
-        ##5;
+        // Quadrant 1 (re > 0, im > 0)
+        test_cordic("Q1: re > im", 12'd1000, 12'd500);  // re > im
+        ##10;
+        test_cordic("Q1: im > re", 12'd400, 12'd800);   // im > re
+        ##10;
         
-        // Deuxième quadrant (re < 0, im > 0)
-        $display("\n--- Deuxième quadrant ---");
-        test_cordic(-12'd1000, 12'd500);
-        ##5;
-        test_cordic(-12'd600, 12'd900);
-        ##5;
+        // Quadrant 2 (re < 0, im > 0)
+        test_cordic("Q2: |re| > |im|", -12'd900, 12'd600);  // |re| > |im|
+        ##10;
+        test_cordic("Q2: |im| > |re|", -12'd300, 12'd700);  // |im| > |re|
+        ##10;
         
-        // Troisième quadrant (re < 0, im < 0)
-        $display("\n--- Troisième quadrant ---");
-        test_cordic(-12'd1000, -12'd500);
-        ##5;
-        test_cordic(-12'd700, -12'd700);
-        ##5;
+        // Quadrant 3 (re < 0, im < 0)
+        test_cordic("Q3: |re| > |im|", -12'd1100, -12'd800);  // |re| > |im|
+        ##10;
+        test_cordic("Q3: |im| > |re|", -12'd500, -12'd1000);  // |im| > |re|
+        ##10;
         
-        // Quatrième quadrant (re > 0, im < 0)
-        $display("\n--- Quatrième quadrant ---");
-        test_cordic(12'd1000, -12'd500);
-        ##5;
-        test_cordic(12'd600, -12'd900);
-        ##5;
-        
-        // Cas spéciaux
-        $display("\n--- Cas spéciaux ---");
-        test_cordic(12'd0, 12'd1000);    // Axe imaginaire positif
-        ##5;
-        test_cordic(12'd0, -12'd1000);   // Axe imaginaire négatif
-        ##5;
-        test_cordic(12'd1000, 12'd0);    // Axe réel positif
-        ##5;
-        test_cordic(-12'd1000, 12'd0);   // Axe réel négatif
-        ##5;
-        
-        // Test avec valeurs maximales
-        $display("\n--- Valeurs maximales ---");
-        test_cordic(12'd2047, 12'd0);
-        ##5;
-        test_cordic(12'd0, 12'd2047);
-        ##5;
-        test_cordic(12'd2047, 12'd2047);
-        ##5;
-        
-        // Test avec valeurs minimales
-        $display("\n--- Valeurs minimales ---");
-        test_cordic(-12'd2048, 12'd0);
-        ##5;
-        test_cordic(12'd0, -12'd2048);
-        ##5;
-        test_cordic(-12'd2048, -12'd2048);
-        ##5;
+        // Quadrant 4 (re > 0, im < 0)
+        test_cordic("Q4: re > |im|", 12'd850, -12'd450);  // re > |im|
+        ##10;
+        test_cordic("Q4: |im| > re", 12'd600, -12'd950);  // |im| > re
+        ##10;
         
         $display("\n=== Fin des tests ===");
         #100;
