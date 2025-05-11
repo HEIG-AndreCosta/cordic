@@ -31,6 +31,11 @@ begin
         im_v :=  signed(im_i);
         phi_v := signed(phi_i);
         iter_v := unsigned(iter_i);
+
+        -- code added because of some error when doing the TestBench where iter_v = 0 before the testbench is run
+        if to_integer(iter_v) = 0 then
+            iter_v := to_unsigned(1, iter_v'length);
+        end if;
         
         -- Test si la partie imaginaire est négative
         negative_v := im_v(im_v'high);
