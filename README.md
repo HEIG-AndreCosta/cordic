@@ -15,10 +15,10 @@ do ../scripts/sim.do
 vsim -do "do ../scripts/sim.do comb 0"
 
 # Architecture pipeline
-vsim -do "do ../scripts/sim.do pipeline 0"
+vsim -do "do ../scripts/sim.do pipeline 1"
 
 # Architecture séquentielle
-vsim -do "do ../scripts/sim.do sequential 0"
+vsim -do "do ../scripts/sim.do sequential 2"
 
 # Toutes les architectures
 vsim -do "do ../scripts/sim.do all"

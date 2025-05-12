@@ -20,6 +20,11 @@ module cordic_tb#(int TESTCASE = 0);
 
     logic clk = 0;
     logic rst = 0;
+    
+    // Variables pour le scoreboard
+    int tests_total = 0;
+    int tests_passed = 0;
+    string architecture_type = "";
 
     default clocking cb @(posedge clk);
     endclocking
@@ -194,9 +199,13 @@ module cordic_tb#(int TESTCASE = 0);
         $display("Amplitude - Attendue: %0d, Obtenue: %0d, Theorique: %0.0f", expected_amp, result_amp, theoretical_amp);
         $display("Phase - Attendue: %0d, Obtenue: %0d, Theorique: %0d", expected_phi, result_phi, theoretical_phi);
         
+        // Mise à jour du compteur de tests
+        tests_total++;
+        
         // Verification
         if (result_amp == expected_amp && result_phi == expected_phi) begin
             $display("*** TEST REUSSI ***");
+            tests_passed++;
         end else begin
             $display("*** TEST ECHOUE ***");
             $display("Erreur amplitude: %0d", $signed(result_amp - expected_amp));
@@ -204,7 +213,26 @@ module cordic_tb#(int TESTCASE = 0);
         end
     endtask
 
+    // Tâche pour afficher le scoreboard final
+    task automatic display_scoreboard();
+        $display("\n=== SCOREBOARD FINAL ===");
+        $display("Architecture: %s", architecture_type);
+        $display("Tests réussis: %0d / %0d", tests_passed, tests_total);
+        $display("Pourcentage de réussite: %0.2f%%", (tests_passed * 100.0) / tests_total);
+        $display("===================");
+    endtask
+
     initial begin
+        // Déterminer l'architecture utilisée
+        // Ceci pourrait être fait automatiquement en analysant la configuration
+        // Ou pourrait être passé en paramètre par le script de simulation
+        case (TESTCASE)
+            0: architecture_type = "Combinatoire";
+            1: architecture_type = "Pipeline";
+            2: architecture_type = "Séquentielle";
+            default: architecture_type = "Inconnue";
+        endcase
+        
         // Initialisation
         in_if.re = 0;
         in_if.im = 0;
@@ -218,6 +246,7 @@ module cordic_tb#(int TESTCASE = 0);
         ##10;
         
         $display("=== Test du systeme CORDIC - 8 tests pour tous les quadrants ===");
+        $display("Architecture: %s", architecture_type);
         
         // Quadrant 1 (re > 0, im > 0)
         test_cordic("Q1: re > im", 12'd1000, 12'd500);  // re > im
@@ -242,6 +271,9 @@ module cordic_tb#(int TESTCASE = 0);
         ##10;
         test_cordic("Q4: |im| > re", 12'd600, -12'd950);  // |im| > re
         ##10;
+        
+        // Afficher le scoreboard final
+        display_scoreboard();
         
         $display("\n=== Fin des tests ===");
         #100;
