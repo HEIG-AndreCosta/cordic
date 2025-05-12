@@ -75,7 +75,7 @@ begin
 
         -- Comparaison entre re et im. Si re > im alors leurs valeurs sont échangées. Ceci projette
         -- les coordonnées dans le premier octant.
-        if re_v > im_v then
+        if im_v > re_v then
             tmp_v := re_v;
             re_v := im_v;
             im_v := tmp_v;
