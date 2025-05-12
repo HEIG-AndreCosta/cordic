@@ -1,7 +1,8 @@
 # SCF - Labo 8 - Calculateur CORDIC
 
 ## Simulation
-´´´bash
+
+```bash
 # 1. Naviguer vers le répertoire sim
 cd ~/cordic/code/sim
 
@@ -19,10 +20,11 @@ vsim -do "do ../scripts/sim.do pipeline 1"
 
 # Architecture séquentielle
 vsim -do "do ../scripts/sim.do sequential 2"
-
-´´´
+```
 
 ## Doc info
+
+Nous utilisons typst pour générer la documentation en pdf.
 ### Installation de typst
 
 Sources: https://github.com/typst/typst
@@ -35,6 +37,6 @@ winget install --id Typst.Typst
 
 ### Utilisation de typst
 
-#### Watches source files and recompiles on changes.
+#### Watches source files and recompiles on changes:
 typst watch ./docs/report/report.typ
 
