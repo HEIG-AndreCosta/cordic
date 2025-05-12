@@ -118,7 +118,8 @@ module cordic_tb#(int TESTCASE = 0);
         
         // Etape 2 : Iterations CORDIC
         phi = 0;
-        
+        $display("Init: re = %0d, im = %0d, phi = %0d", re, im, phi);
+
         for (i = 1; i <= 10; i++) begin
             re_old = re;
             im_old = im;
@@ -129,16 +130,26 @@ module cordic_tb#(int TESTCASE = 0);
             re_shift = re_old >>> i;
             im_shift = im_old >>> i;
             
+            $display("Iteration %0d (avant): re = %0d, im = %0d, phi = %0d", i, re_old, im_old, phi_old);
+            $display("  Shifts: re_shift = %0d, im_shift = %0d, im_negative = %0d", re_shift, im_shift, im_negative);
+            
             if (im_negative) begin
                 re = re_old - im_shift;
                 im = im_old + re_shift;
                 phi = phi_old - alpha_values[i-1];
+                $display("  Cas im < 0: re += -%0d, im += %0d, phi -= %0d", im_shift, re_shift, alpha_values[i-1]);
             end else begin
                 re = re_old + im_shift;
                 im = im_old - re_shift;
                 phi = phi_old + alpha_values[i-1];
+                $display("  Cas im >= 0: re += %0d, im -= %0d, phi += %0d", im_shift, re_shift, alpha_values[i-1]);
             end
+            
+            $display("Iteration %0d (après): re = %0d, im = %0d, phi = %0d", i, re, im, phi);
+            $display("----------------------------------------------------");
         end
+
+        $display("Résultat final: re = %0d, im = %0d, phi = %0d", re, im, phi);
         
         // Etape 3 : Projection de l'angle sur les 4 quadrants
         PI_DIV_2 = 11'd512; // 2^9
