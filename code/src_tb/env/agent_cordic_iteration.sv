@@ -1,57 +1,27 @@
 `timescale 1ns/1ps
 `include "uvm_macros.svh"
 import uvm_pkg::*;
+import cordic_pkg_sv::*;
 
-typedef struct packed {
-    logic [11:0] re;
-    logic [11:0] im;
-    logic [10:0] phi;
-    logic[3:0] iter;
-
-    // to add in the vhdl code
-    //logic valid;
-    //logic ready;
-} cordic_in_transaction;
-
-typedef struct packed {
-    logic[11:0] re;
-    logic[11:0] im;
-    logic[10:0] phi;
-
-    // to add in the vhdl code
-    //logic valid;
-    //logic ready;
-} cordic_out_transaction;
-
-class cordic_in_item extends uvm_sequence_item;
-  rand cordic_in_transaction trans;
-
-  `uvm_object_utils(cordic_in_item)
-  function new(string name="cordic_in_item"); super.new(name); endfunction
-endclass
-
-
-class cordic_sequencer extends uvm_sequencer#(cordic_in_item);
-
-   `uvm_component_utils(cordic_sequencer)
+class cordic_iteration_sequencer extends uvm_sequencer#(cordic_iteration_in_item);
+    // tie our component to the UVM 'factory'
+   `uvm_component_utils(cordic_iteration_sequencer)
      
     function new (string name, uvm_component parent);
         super.new(name, parent);
     endfunction : new
 
-    //add your sequence here
+endclass : cordic_iteration_sequencer
 
-endclass : cordic_sequencer
-
-class cordic_driver extends uvm_driver#(cordic_in_item);
+class cordic_iteration_driver extends uvm_driver#(cordic_iteration_in_item);
 
     // Virtual Interface
-    virtual cordic_in_if.drv vif;
+    virtual cordic_iteration_in_if.drv vif;
 
     // tie our component to the UVM 'factory'
-    `uvm_component_utils(cordic_driver)
+    `uvm_component_utils(cordic_iteration_driver)
 
-    uvm_analysis_port #(cordic_in_transaction) out;
+    uvm_analysis_port #(cordic_iteration_io_item) out;
 
     // Constructor
     function new (string name, uvm_component parent);
@@ -62,56 +32,42 @@ class cordic_driver extends uvm_driver#(cordic_in_item);
     //get the interface handle from the uvm config
     function void build_phase(uvm_phase phase);
       super.build_phase(phase);
-       if(!uvm_config_db#(virtual cordic_in_if.drv)::get(this, "", "vif", vif))
+       if(!uvm_config_db#(virtual cordic_iteration_in_if.drv)::get(this, "", "vif", vif))
          `uvm_fatal("NO_VIF",{"virtual interface must be set for: ",get_full_name(),".vif"});
     endfunction: build_phase
 
     // run phase
     virtual task run_phase(uvm_phase phase);
-        cordic_in_item req;
+        cordic_iteration_in_item req;
+        cordic_iteration_in_transaction trans;
+        cordic_iteration_io_item io;
         forever begin
             seq_item_port.get_next_item(req);
-            cordic_in_transaction trans = req.trans;
-            //respond_to_transfer(req);
-            driver(trans);
+            trans = req.trans;
+            @(posedge vif.clk);
+            vif.re <= trans.re;
+            vif.im <= trans.im;
+            vif.phi <= trans.phi;
+            vif.iter <= trans.iter;
             seq_item_port.item_done();
-            out.write(trans);
+            io = cordic_iteration_io_item::type_id::create("io", this);
+            io.in = trans;
+            out.write(io);
         end
     endtask : run_phase
 
-    // driver 
-    virtual task driver(cordic_in_transaction trans);
-        //@(posedge vif.clk);
-        /*while(vif.ready == 0) begin
-            (@posedge clk_i);
-        end*/
-        // si le wait ne fonctionne pas, utilisé la while ci-dessus
-        //wait(vif.ready == 1);
-        @(posedge vif.clk);
-        vif.re <= trans.re;
-        vif.im <= trans.im;
-        vif.phi <= trans.phi;
-        vif.iter <= trans.iter;
-        /*vif.valid <= 1;
-        @(posedge vif.clk);
-        vif.valid <= 0;*/
-    endtask : driver
+endclass : cordic_iteration_driver
 
-endclass : cordic_driver
-
-class cordic_monitor extends uvm_monitor;
+class cordic_iteration_monitor extends uvm_monitor;
 
     // Virtual Interface
-    virtual cordic_out_if.mon vif;
+    virtual cordic_iteration_out_if.mon vif;
 
     // this line is used to connect to our scoreboard
-    uvm_analysis_port #(cordic_out_transaction) out;
-
-    // Placeholder to capture transaction information.
-    //cordic_out_transaction trans;
+    uvm_analysis_port #(cordic_iteration_io_item) out;
     
     // tie our component to the UVM 'factory'
-    `uvm_component_utils(cordic_monitor)
+    `uvm_component_utils(cordic_iteration_monitor)
 
     // new - constructor
     function new (string name, uvm_component parent);
@@ -121,35 +77,36 @@ class cordic_monitor extends uvm_monitor;
 
     function void build_phase(uvm_phase phase);
         super.build_phase(phase);
-        if(!uvm_config_db#(virtual cordic_out_if.mon)::get(this, "", "vif", vif))
+        if(!uvm_config_db#(virtual cordic_iteration_out_if.mon)::get(this, "", "vif", vif))
             `uvm_fatal("NOVIF",{"virtual interface must be set for: ",get_full_name(),".vif"});
     endfunction: build_phase
 
     // run phase
     virtual task run_phase(uvm_phase phase);
       forever begin
-        cordic_out_transaction trans;
+        cordic_iteration_out_transaction trans;
+        cordic_iteration_io_item io;
         @(posedge vif.clk);
         trans.re = vif.re;
         trans.im = vif.im;
         trans.phi = vif.phi;
-        //trans.ready = vif.ready;
-        //trans.valid = vif.valid;
         //finally send it to the scoreboard or whoever is listening
-        out.write(trans);
+        io = cordic_iteration_io_item::type_id::create("io", this);
+        io.out = trans;
+        out.write(io);
       end;
     endtask : run_phase
 
-endclass : cordic_monitor
+endclass : cordic_iteration_monitor
 
-class cordic_agent extends uvm_agent;
+class cordic_iteration_agent extends uvm_agent;
   //declaring agent components
-  cordic_driver    driver;
-  cordic_sequencer sequencer;
-  cordic_monitor   monitor;
+  cordic_iteration_driver    driver;
+  cordic_iteration_sequencer sequencer;
+  cordic_iteration_monitor   monitor;
 
   // UVM automation macros for general components
-  `uvm_component_utils(cordic_agent)
+  `uvm_component_utils(cordic_iteration_agent)
 
   // constructor
   function new (string name, uvm_component parent);
@@ -161,11 +118,11 @@ class cordic_agent extends uvm_agent;
     super.build_phase(phase);
 
     if(get_is_active() == UVM_ACTIVE) begin
-      driver = cordic_driver::type_id::create("driver", this);
-      sequencer = cordic_sequencer::type_id::create("sequencer", this);
+      driver = cordic_iteration_driver::type_id::create("driver", this);
+      sequencer = cordic_iteration_sequencer::type_id::create("sequencer", this);
     end
 
-    monitor = cordic_monitor::type_id::create("monitor", this);
+    monitor = cordic_iteration_monitor::type_id::create("monitor", this);
   endfunction : build_phase
 
   // connect_phase
@@ -175,14 +132,23 @@ class cordic_agent extends uvm_agent;
     end
   endfunction : connect_phase
 
-endclass : cordic_agent
+endclass : cordic_iteration_agent
 
-class cordic_scoreboard extends uvm_scoreboard;
+class cordic_iteration_scoreboard extends uvm_scoreboard;
 
-  `uvm_component_utils(cordic_scoreboard)
+  // tie our component to the UVM 'factory'
+  `uvm_component_utils(cordic_iteration_scoreboard)
 
-  uvm_analysis_imp#(cordic_in_transaction, cordic_scoreboard) in;
-  uvm_analysis_imp#(cordic_out_transaction, cordic_scoreboard) out;
+  // listen to the port connected to driver/monitor
+  uvm_analysis_imp#(cordic_iteration_io_item, cordic_iteration_scoreboard) in;
+
+  uvm_tlm_analysis_fifo #(cordic_iteration_in_transaction) in_fifo ;
+  uvm_tlm_analysis_fifo #(cordic_iteration_out_transaction) out_fifo;
+
+  // report data
+  int unsigned total_pass = 0;
+  int unsigned total_failed = 0;
+	cordic_iteration_cg all_iter;
 
   // new - constructor
   function new (string name, uvm_component parent);
@@ -191,19 +157,65 @@ class cordic_scoreboard extends uvm_scoreboard;
 
   function void build_phase(uvm_phase phase);
     super.build_phase(phase);
-    in = new("in", this);
-    out = new("out", this);
+
+    in  = new("in",  this);
+
+    in_fifo  = new("in_fifo" , this);
+    out_fifo = new("out_fifo", this);
   endfunction: build_phase
   
   // write
-  virtual function void write(cordic_in_transaction pkt);
-    $display("SCB:: Pkt recived");
-    //pkt.print();
-  endfunction : write
+  virtual function void write(cordic_iteration_io_item pkt);
+    if(pkt.in.re !== 'X) begin
+      in_fifo.write(pkt.in);
+    end
+    if(pkt.out.re !== 'X) begin
+      out_fifo.write(pkt.out);
+    end
+  endfunction
 
-  virtual function void write(cordic_out_transaction pkt);
-    $display("SCB:: Pkt recived");
-    //pkt.print();
-  endfunction : write
+  virtual task run_phase(uvm_phase phase);
+    cordic_iteration_in_transaction  in;
+    cordic_iteration_out_transaction reference = '{default:0};
+    cordic_iteration_out_transaction result;
+    bit [3:0] iter;
+    //coverage
+    all_iter = new(iter);
+    
+    // Comparaison des valeurs reçue (Attendu - Résultat)
+    forever begin 
+      in_fifo.get(in);
+      out_fifo.get(result);
 
-endclass : cordic_scoreboard
+      reference.re = in.re;
+      reference.im = in.im;
+      reference.phi = in.phi;
+
+      reference = cordic_iter_calculus(in, reference);
+      iter = in.iter;
+      all_iter.sample();
+      if(reference === result) begin
+        total_pass++;
+        //`uvm_info(get_type_name(), $sformatf("PASS! re=%0d im=%0d, phi=%0d", result.re, result.im, result.phi), UVM_LOW)
+      end
+      else begin
+        total_failed++;
+        `uvm_error (get_type_name(), $sformatf("ERROR! \nreference = %p\nresult = %p", reference, result))
+      end
+    end
+  endtask
+
+  // Beau report affiché
+  function void report_phase(uvm_phase phase);
+    real cov = (all_iter == null) ? 0.0 : all_iter.get_inst_coverage();
+    string line;
+    line = "\n************  ITERATION  SUMMARY  ************\n";
+    line = {line, $sformatf(" Number of Transactions : %0d\n", total_pass + total_failed)};
+    line = {line, $sformatf(" Total Coverage         : %0.2f %%\n", cov)};
+    line = {line, $sformatf(" Test Passed            : %0d\n", total_pass)};
+    line = {line, $sformatf(" Test Failed            : %0d\n", total_failed)};
+    line = {line,   "*********************************************"};
+    `uvm_info("ITERATION_SUMMARY", line, UVM_NONE)
+  endfunction
+
+endclass : cordic_iteration_scoreboard

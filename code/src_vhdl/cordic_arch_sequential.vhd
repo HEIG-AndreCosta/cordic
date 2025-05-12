@@ -194,8 +194,9 @@ begin
 
                 if iter_v = 10 then
                     state_v := POST_TREATMENT;
+                else
+                    iter_v := iter_v + 1;
                 end if;
-                iter_v := iter_v + 1;
             when POST_TREATMENT =>
                 next_phi_s <= post_treatment_phi_s;
                 next_amp_s <= post_treatment_amp_s;

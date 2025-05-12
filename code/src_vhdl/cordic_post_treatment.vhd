@@ -61,8 +61,8 @@ begin
 
         -- Projection sur les quatre quadrants
         --  — Premier quadrant : phi = phi
-        --  — Deuxième quadrant : phi = P I − phi
-        --  — Troisième quadrant : phi = phi + P I
+        --  — Deuxième quadrant : phi = PI − phi
+        --  — Troisième quadrant : phi = phi + PI
         --  — Quatrième quadrant : phi = −phi
         -- original_quadrant_id_i(1) -> re MSb
         -- original_quadrant_id_i(0) -> im MSb
@@ -70,11 +70,12 @@ begin
             -- Premier
             when "00" => null; -- phi = phi
             -- Deuxième
-            when "01" => phi_v := signed(pidiv1_c) - phi_v;
+            when "10" => phi_v := signed(pidiv1_c) - phi_v;
             -- Troisième
             when "11" => phi_v := signed(pidiv1_c) + phi_v;
             -- Quatrième
-            when "10" => phi_v := -phi_v;
+            when "01" => phi_v := -phi_v;
+            when others => null;
         end case;
         phi_o <= std_logic_vector(phi_v);
     end process;

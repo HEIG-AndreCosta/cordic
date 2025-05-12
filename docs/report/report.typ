@@ -15,3 +15,7 @@
 #include "chapters/introduction.typ"
 #pagebreak()
 #include "chapters/implementation.typ"
+#pagebreak()
+#include "chapters/verification.typ"
+#pagebreak()
+#include "chapters/calcul_reference.typ"

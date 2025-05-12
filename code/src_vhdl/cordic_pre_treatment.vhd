@@ -47,14 +47,14 @@ architecture comb of cordic_pre_treatment is
 begin
 
     process(all) 
-        variable re_v : unsigned(re_i'range);
-        variable tmp_v : unsigned(re_i'range);
-        variable im_v : unsigned(im_i'range);
+        variable re_v : signed(re_i'range);
+        variable tmp_v : signed(re_i'range);
+        variable im_v : signed(im_i'range);
         variable signals_exchanged_v : std_logic;
         variable original_quadrant_id_v : std_logic_vector(1 downto 0);
     begin
-        re_v := unsigned(re_i);
-        im_v := unsigned(im_i);
+        re_v := signed(re_i);
+        im_v := signed(im_i);
         tmp_v := (others => '0');
         signals_exchanged_v := '0';
 
@@ -64,18 +64,18 @@ begin
         
         -- Calcul de la valeur absolue de re et im.
         -- Ceci projette les coordonnées dans le premier quadrant.
-        if original_quadrant_id_v(1) = '0' then
+        if original_quadrant_id_v(1) = '1' then
             re_v := not re_v;
-            re_v := re_v - 1;
+            re_v := re_v + 1;
         end if;
-        if original_quadrant_id_v(0) = '0' then
+        if original_quadrant_id_v(0) = '1' then
             im_v := not im_v;
-            im_v := im_v - 1;
+            im_v := im_v + 1;
         end if;
 
-        -- Comparaison entre re et im. Si re > im alors leurs valeurs sont échangées. Ceci projette
+        -- Comparaison entre re et im. Si im > re alors leurs valeurs sont échangées. Ceci projette
         -- les coordonnées dans le premier octant.
-        if re_v > im_v then
+        if im_v > re_v then
             tmp_v := re_v;
             re_v := im_v;
             im_v := tmp_v;

@@ -20,34 +20,42 @@ architecture cordic_iteration of cordic_iteration is
 begin
 
     process(all)
-        variable re_v  : unsigned(re_i'range);   
-        variable im_v  : unsigned(im_i'range);    
-        variable phi_v : unsigned(phi_i'range);
+        variable re_v  : signed(re_i'range);   
+        variable im_v  : signed(im_i'range);    
+        variable re_shift_v  : signed(re_i'range);   
+        variable im_shift_v  : signed(im_i'range); 
+        variable phi_v : signed(phi_i'range);
         variable iter_v : unsigned(iter_i'range);
         variable negative_v : std_logic;
     begin
-        re_v :=  unsigned(re_i);
-        im_v :=  unsigned(im_i);
-        phi_v := unsigned(phi_i);
+        re_v :=  signed(re_i);
+        im_v :=  signed(im_i);
+        re_shift_v := to_signed(0, re_i'length);
+        im_shift_v := to_signed(0, im_i'length);
+        phi_v := signed(phi_i);
         iter_v := unsigned(iter_i);
-        negative_v :=  phi_v(phi_i'high);
+        negative_v :=  im_v(im_i'high);
+
+        -- code added because of some error when doing the TestBench where iter_v = 0 before the testbench is run
+        if to_integer(iter_v) = 0 then
+            iter_v := to_unsigned(1, iter_v'length);
+        end if;
         
+        -- shift
+        re_shift_v := shift_right(re_v, to_integer(iter_v));
+        im_shift_v := shift_right(im_v, to_integer(iter_v));
 
         if negative_v = '1' then
-            re_v := re_v - im_v;
+            re_v := re_v - im_shift_v;
             -- take the previous value so re_i instead of re_v
-            im_v := im_v + unsigned(re_i) ;
-            phi_v := phi_v - unsigned(alpha_values_c(to_integer(iter_v)));
+            im_v := im_v + re_shift_v;
+            phi_v := phi_v - signed(alpha_values_c(to_integer(iter_v)));
         else
-            re_v := re_v + im_v;
+            re_v := re_v + im_shift_v;
             -- take the previous value so re_i instead of re_v
-            im_v := im_v - unsigned(re_i);
-            phi_v := phi_v + unsigned(alpha_values_c(to_integer(iter_v)));
+            im_v := im_v - re_shift_v;
+            phi_v := phi_v + signed(alpha_values_c(to_integer(iter_v)));
         end if;
-
-        -- shift
-        re_v := shift_right(re_v, to_integer(iter_v));
-        im_v   := shift_right(im_v, to_integer(iter_v));
 
         re_o  <= std_logic_vector(re_v);
         im_o  <= std_logic_vector(im_v);
