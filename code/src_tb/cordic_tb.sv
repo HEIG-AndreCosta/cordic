@@ -217,8 +217,8 @@ module cordic_tb#(int TESTCASE = 0);
     task automatic display_scoreboard();
         $display("\n=== SCOREBOARD FINAL ===");
         $display("Architecture: %s", architecture_type);
-        $display("Tests réussis: %0d / %0d", tests_passed, tests_total);
-        $display("Pourcentage de réussite: %0.2f%%", (tests_passed * 100.0) / tests_total);
+        $display("Tests reussis: %0d / %0d", tests_passed, tests_total);
+        $display("Pourcentage de reussite: %0.2f%%", (tests_passed * 100.0) / tests_total);
         $display("===================");
     endtask
 
@@ -229,7 +229,7 @@ module cordic_tb#(int TESTCASE = 0);
         case (TESTCASE)
             0: architecture_type = "Combinatoire";
             1: architecture_type = "Pipeline";
-            2: architecture_type = "Séquentielle";
+            2: architecture_type = "Sequentielle";
             default: architecture_type = "Inconnue";
         endcase
         
