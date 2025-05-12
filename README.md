@@ -20,9 +20,6 @@ vsim -do "do ../scripts/sim.do pipeline 1"
 # Architecture séquentielle
 vsim -do "do ../scripts/sim.do sequential 2"
 
-# Toutes les architectures
-vsim -do "do ../scripts/sim.do all"
-
 ´´´
 
 ## Doc info
