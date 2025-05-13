@@ -10,7 +10,13 @@ L'implémentation du calculateur CORDIC a été décomposée en trois composants
 
 Cette décomposition modulaire permet d'implémenter les trois architectures demandées (combinatoire, pipeline, séquentielle) en réutilisant ces blocs de base et en modifiant uniquement la manière dont ils sont connectés et synchronisés.
 
+#image("../media/schema_bloc.png")
+
 == Architecture combinatoire
+
+=== Schéma bloc
+
+#image("../media/cordic-combinatoire.svg")
 
 === Principe de fonctionnement
 
@@ -28,6 +34,10 @@ L'architecture combinatoire instancie les composants de manière purement combin
 
 == Architecture pipeline
 
+=== Schéma bloc
+
+#image("../media/cordic-pipeline.svg")
+
 === Principe de fonctionnement
 L'architecture pipeline insère des registres entre chaque étape de calcul pour découper le chemin critique en segments plus courts. Elle comprend :
 
@@ -36,12 +46,21 @@ L'architecture pipeline insère des registres entre chaque étape de calcul pour
 - Un bloc de post-traitement
 - Une gestion du flux de données avec des signaux de contrôle permettant de stopper le pipeline si nécessaire
 
+Le schéma bloc de cette architecture est très similaire à l'architecture combinatoire.
+En effet, nous ajoutons des registres entre chaque étape pour garantir le plus petit temps de propagation possible.
+La partie la plus compliqué est de gérer correctement l'arrêt de la pipeline, pour cela, notre implémentation permet aux données d'arriver à la dernière étape 
+avant de s'arrêter au cas où le composant qui vient après n'est pas prêt.
+
 === Caractéristiques
 - *Avantages* : Fréquence de fonctionnement élevée, débit maximal (un résultat par cycle d'horloge en régime permanent).
 - *Inconvénients* : Latence importante (12 cycles entre l'entrée et la sortie), consommation de ressources plus élevée pour les registres.
 // TODO: - *Fréquence maximale* : 187,4 MHz
 
 == Architecture séquentielle
+
+=== Schéma bloc
+
+#image("../media/cordic-sequentiel.svg")
 
 === Principe de fonctionnement
 L'architecture séquentielle utilise une machine à états finis pour contrôler la réutilisation d'un seul bloc d'itération. Elle est composée de :
@@ -56,6 +75,9 @@ Les états principaux de la machine à états sont :
 - `ITERATION` : Exécution séquentielle des 10 itérations CORDIC
 - `POST_TREATMENT` : Application du post-traitement
 - `VALID` : Signalement que le résultat est valide
+
+Même pour cette architecture, nous pouvons utiliser les mêmes blocs utilisées auparavant. Ceci montre l'élégance de la décomposition effectué au début 
+de l'implémentation.
 
 === Caractéristiques
 - *Avantages* : Utilisation minimale de ressources, particulièrement adapté pour les applications où la surface est critique.
