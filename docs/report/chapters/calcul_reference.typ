@@ -1,17 +1,21 @@
 = Calcul de référence
 
-Calcul des 10 itérations CORDIC pour re=1000, im=500.
+Lors de l'implémentation de l'algorithme, nous nous sommes retrouvées avec de gros décalages entre la valeur théorique et la valeur calculé par le système.
+La valeur attendue du système a donc été calculé à la main pour vérifier que le système répond à la donnée.
+
+$ "re"=1000 "im"=500 $
 
 == Étape 1 : Prétraitement
 - Calcul de la valeur absolue de re et im. Ceci projette les coordonnées dans le premier quadrant.
 - Comparaison entre re et im. Si im > re alors leurs valeurs sont échangées. Ceci projette les coordonnées dans le premier octant.
-  - Coordonnées initiales : re=1000, im=500
-  - Les deux sont positifs → premier quadrant (original_quadrant_id = "00")
-  - Valeurs absolues : re=1000, im=500 (pas de changement car déjà positifs)
-  - im < re → pas d'échange : re=1000, im=500, signals_exchanged=0
+  - Coordonnées initiales : 
+    $ "re"=1000 "im"=500 $
+  - Les deux sont positifs : Premier quadrant
+  - Valeurs absolues : Pas de changement car déjà positifs
+  - re > im : Pas d'échange
 
 == Étape 2 : Itérations CORDIC
-Les constantes alpha_const sont fournies dans le package (cordic_pkg.vhd) :
+Les constantes alpha_const sont fournies dans le fichier `cordic_pkg.vhd` :
 - $alpha_1$ = 302 (= 00100101110 en binaire)
 - $alpha_2$ = 160 (= 00010100000)
 - $alpha_3$ = 81  (= 00001010001)
@@ -25,17 +29,18 @@ Les constantes alpha_const sont fournies dans le package (cordic_pkg.vhd) :
 
 === Explication sur les shifts arithmétiques vs division entière
 
-Dans l'implémentation matérielle du CORDIC, les divisions par puissances de 2 sont réalisées par des décalages binaires (shifts). Il est important de comprendre la différence entre une division entière classique et un décalage arithmétique, particulièrement pour les nombres négatifs :
+Dans l'implémentation matérielle du CORDIC, les divisions par puissances de 2 sont réalisées par des décalages binaires (shifts).
+Il est important de comprendre la différence entre une division entière classique et un décalage arithmétique, particulièrement pour les nombres négatifs :
 
 - *Division entière* : Lorsqu'on calcule manuellement, on obtient par exemple -156 / 16 = -9,75, qui est tronqué à -9 (arrondi vers zéro)
 - *Décalage arithmétique à droite (-156 >> 4)* : Le décalage préserve le bit de signe et arrondit vers le bas (vers -∞), donnant -10 en complément à deux
 
 Cette différence peut expliquer les écarts entre un calcul manuel théorique en utilisant la division entière et l'implémentation matérielle réelle.
-Afin de vérifier notre implémentation matérielle, nous avons vérifié les calcules à l'aide de shift.
+Afin de vérifier notre implémentation matérielle, nous avons vérifié les calculs à l'aide de shift.
 
 === Calculs des itérations
 
-À chaque itération, les calculs suivants sont effectués selon le signe de im :
+À chaque itération, les calculs suivants sont effectués selon le signe de `im` :
 
 - Si la partie imaginaire à l'itération i est négative :
   - $"re"_{i+1} = "re"_i - "im"_i/2^i$ (où la division est un décalage arithmétique)
@@ -77,53 +82,56 @@ Détails des calculs (avec décalages arithmétiques pour les nombres négatifs)
 - Itération 9 : $"im"_i>>9$ = (-1)>>9 = -1, $"re"_i>>9$ = 1305>>9 = 2
 - Itération 10 : $"im"_i>>10$ = 1>>10 = 0, $"re"_i>>10$ = 1306>>10 = 1
 
-À la fin des 10 itérations :
-- re final = 1306
-- im final = 0
-- phi final = 302
+*Résultat de l'étape 2* : $ "re" = 1306; "im" = 0; phi = 302 $
 
 == Étape 3 : Projection de l'angle sur les 4 quadrants
 
-Rappel des valeurs après les itérations :
-- phi après itérations = 302
-- signals_exchanged = 0 (pas d'échange lors du prétraitement)
-- original_quadrant_id = "00" (premier quadrant)
-
 === Projection sur le premier quadrant :
 
-- PI   = $2^(11-1)$ = $2^10$ = 1024 (d'après la constante pidiv1_c dans le package)
-- PI/2 = $2^(11-2)$ = $2^9$  =  512 (d'après la constante pidiv2_c dans le package)
-
-Si les coordonnées re et im ont été échangées à l'étape 1, appliquer la correction $phi = pi/2 - phi$. Sinon laisser l'angle tel quel.
-- signals_exchanged = 0 → pas de correction, phi reste à 302
+On laisse `phi` tel quel vu que les valeurs `re` et `im` non pas été modifiées lors de l'étape 1.
 
 === Projection sur les quatre quadrants :
 
-- Premier quadrant : $phi = phi$
-- Deuxième quadrant : $phi = pi - phi$
-- Troisième quadrant : $phi = phi + pi$
-- Quatrième quadrant : $phi = -phi$
+On laisse encore `phi` tel quel car le quadrant d'origine était le premier.
 
-Donc:
-- original_quadrant_id = "00" → Premier quadrant
-- Pour le premier quadrant : $phi = phi$ (pas de modification)
-- Donc phi = 302
-
-*Résultat de l'étape 3* : $phi_o$ = 302
-
+*Résultat de l'étape 3* : $ "re" = 1306; "im" = 0; phi = 302 $
 == Étape 4 : Extraction de l'amplitude
 
 L'algorithme CORDIC en mode "vectoring" rabat le vecteur sur l'axe des réels. L'amplitude est donc simplement la valeur réelle de la dernière itération.
 
-*Résultat de l'étape 4* : $"amp"_o$ = re final = 1306
+*Résultat de l'étape 4* :  $ "amp" = 1306; phi = 302 $
 
 == Résultats finaux du calculateur CORDIC :
-- Amplitude ($"amp"_o$) = 1306
-- Phase ($phi_o$) = 302
+
+=== Conversion phase en radians
 
 Conversion de la phase en radians :
 - 302 sur 11 bits signés correspond à : $302 / 2^10 * pi approx 0.295 * pi approx 0.926$ radians
 
-Comparaison avec les valeurs théoriques :
-- Amplitude théorique = $sqrt(1000^2 + 500^2) approx 1118$
-- Phase théorique = $arctan(500/1000) approx 0.464$ radians
+=== Calcul Théorique
+
+- Amplitude théorique:
+
+$ sqrt(1000^2 + 500^2) approx 1118 $
+- Phase théorique
+
+$ arctan(500/1000) approx 0.464 "radians" $
+
+=== Comparaison
+
+#table(
+  columns: (auto, 0.5fr, 0.5fr),
+  stroke: 0.5pt,
+  [], [*Théorique*], [*Algorithme*],
+  [*Amplitude*], [1118], [1306],
+  [*Phase*], [0.464], [0.926],
+)
+
+== Conclusion calcul de référence
+Ces résultats montrent que l’approximation réalisée par cet algorithme n’est pas suffisamment précise. Par conséquent,
+il n’est pas pertinent de se baser sur la valeur théorique lors de la vérification dans le test bench.
+
+Pour pallier cela, nous avons utilisé le même algorithme dans le test bench que celui implémenté dans notre système.
+Cette approche permet de s’assurer que l’implémentation fonctionne correctement. En temps normal, cette méthode ne serait pas recommandée, car elle ne permet pas de valider
+la justesse de l’algorithme lui-même. Toutefois, étant donné les performances limitées de cet algorithme en termes de précision,
+cela reste la seule solution fiable pour évaluer l’exactitude de notre implémentation.
