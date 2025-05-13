@@ -36,7 +36,7 @@ begin
         iter_v := unsigned(iter_i);
         negative_v :=  im_v(im_i'high);
 
-        -- code added because of some error when doing the TestBench where iter_v = 0 before the testbench is run
+        -- Handle the case in simulation where iter_v is undefined and thus 0 when converted to integer
         if to_integer(iter_v) = 0 then
             iter_v := to_unsigned(1, iter_v'length);
         end if;
@@ -47,12 +47,10 @@ begin
 
         if negative_v = '1' then
             re_v := re_v - im_shift_v;
-            -- take the previous value so re_i instead of re_v
             im_v := im_v + re_shift_v;
             phi_v := phi_v - signed(alpha_values_c(to_integer(iter_v)));
         else
             re_v := re_v + im_shift_v;
-            -- take the previous value so re_i instead of re_v
             im_v := im_v - re_shift_v;
             phi_v := phi_v + signed(alpha_values_c(to_integer(iter_v)));
         end if;
