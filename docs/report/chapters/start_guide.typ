@@ -19,7 +19,12 @@ vsim -do "do ../scripts/sim.do pipeline 1"
 # Architecture séquentielle
 vsim -do "do ../scripts/sim.do sequential 2"
 
-# Bloc de pré-traitement
+# NOTE: Le script sim_bloc.do dépend du chemin vers les sources UVM fournis par
+# questasim:
+# Ligne 7: set PATH_UVM    "/opt/mentor/questasim/verilog_src/uvm-1.2/src"
+# Ce chemin correspond au chemin VM reds
+# Vérifiez que cela marche pour votre machine ou modifiez-le avant de lancer les
+# commandes suivantes
 vsim -do "do ../scripts/sim_bloc.do pre_test"
 
 # Bloc de cordic itération
