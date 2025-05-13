@@ -30,7 +30,25 @@ L'architecture combinatoire instancie les composants de manière purement combin
 
 - *Avantages* : Latence minimale (le résultat est disponible immédiatement après l'application des entrées).
 - *Inconvénients* : Chemin critique très long traversant tous les composants, limitant significativement la fréquence maximale de fonctionnement.
-// TODO: - *Fréquence maximale* : 48,2 MHz
+
+=== Fréquence Maximale 
+
+Pour cette architecture, il n'est pas possible de calculer la fréquence maximale, dû au fait qu'il n'y a pas de registres pour dans le système synthétisé.
+Cependant nous pouvons en déduire de la fréquence maximale de l'architecture pipeliné (voir ci-dessus).
+
+L'architecture pipeliné tourne à `304,4MHz` ce qui implique un temps de propagation maximale de:
+
+$ 1 /(304 * 10^6) = 3"ns" $
+
+Si l'on considère que chaque bloc est équivalent, nous pouvons en déduire que le temps de propagation de notre système sera de 
+
+$ 12 * 1 / (304 * 10^6) = 39"ns" $
+
+et donc, notre bloc limiterait la fréquence maximale dans un système plus complet à 
+
+$ 1 / (12 * 1 / (304 * 10^6)) = 25.6 "MHz" $
+
+Note: Le 12 dans notre calcul prend en compte les 10 blocs itération et les 2 blocs pré et post traitement.
 
 == Architecture pipeline
 
@@ -54,7 +72,7 @@ avant de s'arrêter au cas où le composant qui vient après n'est pas prêt.
 === Caractéristiques
 - *Avantages* : Fréquence de fonctionnement élevée, débit maximal (un résultat par cycle d'horloge en régime permanent).
 - *Inconvénients* : Latence importante (12 cycles entre l'entrée et la sortie), consommation de ressources plus élevée pour les registres.
-// TODO: - *Fréquence maximale* : 187,4 MHz
+- *Fréquence maximale* : 304.4 MHz - Compilation avec Quartus pour la carte DE1-SoC - modèle Slow 1100mV 85C
 
 == Architecture séquentielle
 
@@ -82,7 +100,7 @@ de l'implémentation.
 === Caractéristiques
 - *Avantages* : Utilisation minimale de ressources, particulièrement adapté pour les applications où la surface est critique.
 - *Inconvénients* : Débit limité (un résultat tous les 12 cycles d'horloge), latence moyenne (12 cycles).
-// TODO: - *Fréquence maximale* : 143,6 MHz
+- *Fréquence maximale* : 195.85 MHz - Compilation avec Quartus pour la carte DE1-SoC - modèle Slow 1100mV 85C
 
 == Comparaison des performances
 
@@ -94,9 +112,9 @@ Le tableau suivant présente une comparaison des performances des trois architec
   table.header(
     [Architecture], [Fréquence maximale], [Latence (cycles)], [Débit max (résultats/cycle)], [Utilisation de ressources]
   ),
-    [ Combinatoire ], [48,2 MHz  ], [1 ], [1   ], [Faible  ],
-    [ Pipeline     ], [187,4 MHz ], [12], [1   ], [Élevée  ],
-    [ Séquentielle ], [143,6 MHz ], [12], [1/12], [Minimale],
+    [ Combinatoire ], [25.2 MHz  ], [1 ], [1   ], [Faible  ],
+    [ Pipeline     ], [304.4 MHz ], [12], [1   ], [Élevée  ],
+    [ Séquentielle ], [195.85 MHz ], [12], [1/12], [Minimale],
 )
 
 == Conclusion implémentation
